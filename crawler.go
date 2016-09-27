@@ -132,19 +132,19 @@ func main() {
 				}
 				teams[team.Name] = team
 			}
+		}
 
-			for _, game := range match.Games {
-				for p := 0; p <= 1; p++ {
-					if _, found := lists[game.Players[p]]; !found {
-						lists[game.Players[p]] = map[string]List{}
-					}
+		for _, game := range match.Games {
+			for p := 0; p <= 1; p++ {
+				if _, found := lists[game.Players[p]]; !found {
+					lists[game.Players[p]] = map[string]List{}
+				}
 
-					if _, found := lists[game.Players[p]][game.Lists[p]]; !found {
-						lists[game.Players[p]][game.Lists[p]] = List{
-							ID:       ID("list"),
-							Caster:   game.Lists[p],
-							PlayerID: players[game.Players[p]].ID,
-						}
+				if _, found := lists[game.Players[p]][game.Lists[p]]; !found {
+					lists[game.Players[p]][game.Lists[p]] = List{
+						ID:       ID("list"),
+						Caster:   game.Lists[p],
+						PlayerID: players[game.Players[p]].ID,
 					}
 				}
 			}
