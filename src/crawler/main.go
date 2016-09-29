@@ -23,7 +23,7 @@ var (
 	log = logger.New(os.Stderr).With(logger.M{
 		"app": "crawler",
 	})
-	output = flag.String("out", "-", "output file (default: stdout")
+	output = flag.String("out", "-", "output file")
 )
 
 type (

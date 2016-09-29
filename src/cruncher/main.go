@@ -51,8 +51,8 @@ var (
 	log = logger.New(os.Stderr).With(logger.M{
 		"app": "cruncher",
 	})
-	input  = flag.String("in", "-", "input file (default: stdin)")
-	output = flag.String("out", "out.sqlite", "output file (default: \"out.sqlite\")")
+	input  = flag.String("in", "-", "input file")
+	output = flag.String("out", "out.sqlite", "output file")
 )
 
 func main() {
