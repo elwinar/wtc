@@ -51,8 +51,8 @@ var (
 	log = logger.New(os.Stderr).With(logger.M{
 		"app": "cruncher",
 	})
-	input  = flag.String("in", "-", "input file")
-	output = flag.String("out", "out.sqlite", "output file")
+	input    = flag.String("in", "-", "input file")
+	database = flag.String("db", "data.sqlite", "database file")
 )
 
 func main() {
@@ -71,10 +71,10 @@ func main() {
 		in = file
 	}
 
-	db, err := sqlx.Connect("sqlite3", *output)
+	db, err := sqlx.Connect("sqlite3", *database)
 	if err != nil {
-		log.Error("opening output database", logger.M{
-			"path": *output,
+		log.Error("opening database", logger.M{
+			"path": *database,
 			"err":  err,
 		})
 		return
@@ -83,7 +83,7 @@ func main() {
 	db.MustExec("create table team ( id integer primary key, name varchar(50), country varchar(50) )")
 	db.MustExec("create table player ( id integer primary key, name varchar(50), faction varchar(50), team_id integer )")
 	db.MustExec("create table list ( id integer primary key, caster varchar(50), player_id integer )")
-	db.MustExec("create table match ( id integer primary key, round integer )")
+	db.MustExec("create table match ( id integer primary key, round integer, zone integer )")
 	db.MustExec("create table game ( id integer primary key, match_id integer )")
 	db.MustExec("create table report ( id integer primary key, game_id integer, list_id integer, won boolean )")
 
@@ -209,7 +209,7 @@ func main() {
 		}
 
 		log.Info("inserting match", logger.M{})
-		res, err := db.Exec("insert into match (round) values (?)", match.Round)
+		res, err := db.Exec("insert into match (round, zone) values (?, ?)", match.Round, match.Zone)
 		if err != nil {
 			log.Error("inserting match", logger.M{
 				"err": err,
