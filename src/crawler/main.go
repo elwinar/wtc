@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -24,6 +25,7 @@ var (
 		"app": "crawler",
 	})
 	output = flag.String("out", "-", "output file")
+	silent = flag.Bool("silent", false, "suppress output")
 )
 
 type (
@@ -53,6 +55,10 @@ type (
 
 func main() {
 	flag.Parse()
+
+	if *silent {
+		log.SetOutput(ioutil.Discard)
+	}
 
 	var out io.Writer = os.Stdout
 	if *output != "-" {

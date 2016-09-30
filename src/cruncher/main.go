@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io"
+	"io/ioutil"
 	"logger"
 	"os"
 	"strings"
@@ -53,10 +54,15 @@ var (
 	})
 	input    = flag.String("in", "-", "input file")
 	database = flag.String("db", "data.sqlite", "database file")
+	silent   = flag.Bool("silent", false, "suppress output")
 )
 
 func main() {
 	flag.Parse()
+
+	if *silent {
+		log.SetOutput(ioutil.Discard)
+	}
 
 	var in io.Reader = os.Stdin
 	if *input != "-" {
