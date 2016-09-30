@@ -113,6 +113,17 @@ func main() {
 	var players = make(map[string]int)
 	var lists = make(map[string]map[string]int)
 	for match := range matches {
+		log.Info("inserting match", logger.M{})
+		res, err := db.Exec("insert into match (round, zone) values (?, ?)", match.Round, match.Zone)
+		if err != nil {
+			log.Error("inserting match", logger.M{
+				"err": err,
+			})
+			continue
+		}
+
+		matchID, _ := res.LastInsertId()
+
 		for i := 0; i <= 1; i++ {
 			var team = match.Teams[i]
 			if _, found := teams[team]; found {
@@ -156,76 +167,6 @@ func main() {
 		}
 
 		for _, game := range match.Games {
-			for i := 0; i <= 1; i++ {
-				var player = game.Players[i]
-				if _, found := players[player]; found {
-					continue
-				}
-
-				var faction = factions[game.Lists[i]]
-
-				log.Info("inserting player", logger.M{
-					"name":    player,
-					"faction": faction,
-					"team_id": teams[match.Teams[i]],
-				})
-				res, err := db.Exec("insert into player (name, faction, team_id) values (?, ?, ?)", player, faction, teams[match.Teams[i]])
-				if err != nil {
-					log.Error("inserting player", logger.M{
-						"name":    player,
-						"faction": faction,
-						"team_id": teams[match.Teams[i]],
-						"err":     err,
-					})
-					continue
-				}
-
-				ID, _ := res.LastInsertId()
-				players[player] = int(ID)
-				lists[player] = map[string]int{}
-			}
-		}
-
-		for _, game := range match.Games {
-			for i := 0; i <= 1; i++ {
-				var player = game.Players[i]
-				var caster = game.Lists[i]
-
-				if _, found := lists[player][caster]; found {
-					continue
-				}
-
-				log.Info("inserting list", logger.M{
-					"player": player,
-					"caster": caster,
-				})
-				res, err := db.Exec("insert into list (caster, player_id) values (?, ?)", caster, players[player])
-				if err != nil {
-					log.Error("inserting list", logger.M{
-						"player": player,
-						"caster": caster,
-						"err":    err,
-					})
-					continue
-				}
-
-				ID, _ := res.LastInsertId()
-				lists[player][caster] = int(ID)
-			}
-		}
-
-		log.Info("inserting match", logger.M{})
-		res, err := db.Exec("insert into match (round, zone) values (?, ?)", match.Round, match.Zone)
-		if err != nil {
-			log.Error("inserting match", logger.M{
-				"err": err,
-			})
-			continue
-		}
-
-		matchID, _ := res.LastInsertId()
-
-		for _, game := range match.Games {
 			log.Error("inserting game", logger.M{
 				"match_id": matchID,
 			})
@@ -239,8 +180,52 @@ func main() {
 			}
 
 			gameID, _ := res.LastInsertId()
-
 			for i := 0; i <= 1; i++ {
+				var player = game.Players[i]
+				if _, found := players[player]; !found {
+					var faction = factions[game.Lists[i]]
+
+					log.Info("inserting player", logger.M{
+						"name":    player,
+						"faction": faction,
+						"team_id": teams[match.Teams[i]],
+					})
+					res, err := db.Exec("insert into player (name, faction, team_id) values (?, ?, ?)", player, faction, teams[match.Teams[i]])
+					if err != nil {
+						log.Error("inserting player", logger.M{
+							"name":    player,
+							"faction": faction,
+							"team_id": teams[match.Teams[i]],
+							"err":     err,
+						})
+						continue
+					}
+
+					ID, _ := res.LastInsertId()
+					players[player] = int(ID)
+					lists[player] = map[string]int{}
+				}
+
+				var caster = game.Lists[i]
+				if _, found := lists[player][caster]; !found {
+					log.Info("inserting list", logger.M{
+						"player": player,
+						"caster": caster,
+					})
+					res, err := db.Exec("insert into list (caster, player_id) values (?, ?)", caster, players[player])
+					if err != nil {
+						log.Error("inserting list", logger.M{
+							"player": player,
+							"caster": caster,
+							"err":    err,
+						})
+						continue
+					}
+
+					ID, _ := res.LastInsertId()
+					lists[player][caster] = int(ID)
+				}
+
 				log.Info("inserting report", logger.M{
 					"game_id": gameID,
 					"list_id": lists[game.Players[i]][game.Lists[i]],
